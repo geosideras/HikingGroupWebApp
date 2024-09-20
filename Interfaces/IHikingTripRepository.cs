@@ -6,6 +6,7 @@ namespace HikingGroupWebApp.Interfaces
     {
         Task<IEnumerable<HikingTrip>> GetAll();
         Task<HikingTrip> GetByIdAsync(int id);
+        Task<HikingTrip> GetByIdAsyncNoTracking(int id);
         Task<IEnumerable<HikingTrip>> GetAllHikingTripsByCity(string city);
         bool Add(HikingTrip hikingTrip);
         bool Update(HikingTrip hikingTrip);

@@ -1,8 +1,12 @@
 ﻿@using HikingGroupWebApp.Data.Enum
+@using HikingGroupWebApp.Models
 
- @model HikingTrip
+@model HikingTrip
 
-<form method="post" asp-action="Create" enctype="multipart/form-data">
+<h1>Are you sure you want to delete this hiking trip?</h1>
+
+<form method="post" asp-action="Delete" enctype="multipart/form-data">
+    <input type="hidden" value="AddressId" id="AddressId" />
     <div class="form-group">
         <label asp-for="Title">Title</label>
         <input asp-for="Title" class="form-control" placeholder="Title">
@@ -14,8 +18,8 @@
         <span asp-validation-for="Description" class="text-danger"></span>
     </div>
     <div class="form-group">
-        <label asp-for="HikingTripCategory">HikkingTripCategory</label>
-        <select asp-for="HikingTripCategory" asp-items="@Html.GetEnumSelectList<ClubCategory>()" class="form-control form-control-lg">
+        <label asp-for="HikingTripCategory">HikingTripCategory</label>
+        <select asp-for="HikingTripCategory" asp-items="@Html.GetEnumSelectList<HikingTripCategory>()" class="form-control form-control-lg">
             <option>--Select--</option>
         </select>
         <span asp-validation-for="HikingTripCategory" class="text-danger"></span>
@@ -40,5 +44,10 @@
         <input asp-for="Image" type="file" class="form-control" placeholder="Image">
         <span asp-validation-for="Image" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Submit</button>
 </form>
+<div class="form-group">
+    <form action="Delete" method="post">
+        <input type="hidden" asp-for="Id" />
+        <input type="submit" value="Confirm" class="btn btn-danger float-right mt-3" />
+    </form>
+</div>

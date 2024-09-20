@@ -1,4 +1,4 @@
-﻿@model Club
+﻿@model HikingTrip
 
 <div class="main-container">
     <nav aria-label="breadcrumb" role="navigation" class="bg-primary text-white">
@@ -13,7 +13,7 @@
                             <a href="pages-app.html">Find</a>
                         </li>
 
-                        <li class="breadcrumb-item active" aria-current="page">Runnings Clubs in @Model.Address.City, @Model.Address.Prefecture</li>
+                        <li class="breadcrumb-item active" aria-current="page">Hiking Clubs in @Model.Address.City, @Model.Address.Prefecture</li>
                     </ol>
                 </div>
                 <!--end of col-->
@@ -34,7 +34,7 @@
                         <h1 class="mb-2">@Model.Title</h1>
                         <h2 class="lead mb-3">@Model.Address.City, @Model.Address.Prefecture</h2>
                         <div>
-                            <span class="badge badge-secondary mr-3">@Model.ClubCategory</span>
+                            <span class="badge badge-secondary mr-3">@Model.HikingTripCategory</span>
                         </div>
                         <div>
                             <ul class="list-inline text-small d-inline-block mb-3">

@@ -24,10 +24,10 @@ namespace HikingGroupWebApp.Controllers
             IEnumerable<Club> clubs = await _clubRepository.GetAll();
             return View(clubs);
         }
-        public async Task<IActionResult> Detail(int id)
+        public async Task<IActionResult> Details(int id)
         {
             Club club = await _clubRepository.GetByIdAsync(id);
-            return View(club);
+            return club == null ? NotFound() : View(club);
         }
         public IActionResult Create()
         {
