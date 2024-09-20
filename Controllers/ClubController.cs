@@ -31,10 +31,9 @@ namespace HikingGroupWebApp.Controllers
         }
         public IActionResult Create()
         {
-            //var curUserId = _httpContext.HttpContext.User.GetUserById();
-            //var createClubViewModel = new CreateClubViewModel { AppUserId = curUserId };
-            //return View(createClubViewModel);
-            return View();
+            var curUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+            var createClubViewModel = new CreateClubViewModel { AppUserId = curUserId };
+            return View(createClubViewModel);
         }
         [HttpPost]
         public async Task<IActionResult> Create(CreateClubViewModel clubVM)
@@ -78,7 +77,7 @@ namespace HikingGroupWebApp.Controllers
                 AddressId = club.AddressId,
                 Address = club.Address,
                 URL = club.Image,
-                ClubCategory = club.ClubCategory
+                ClubCategory = club.ClubCategory,
             };
             return View(clubVM);
         }

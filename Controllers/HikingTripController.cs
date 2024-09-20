@@ -31,10 +31,9 @@ namespace HikingGroupWebApp.Controllers
         }
         public IActionResult Create()
         {
-            //var curUserId = _httpContext.HttpContext.User.GetUserById();
-            //var createHikingTripViewModel = new CreateHikingTripViewModel { AppUserId = curUserId };
-            //return View(createHikingTripViewModel);
-            return View();
+            var curUserId = _httpContextAccessor.HttpContext.User.GetUserId();
+            var createHikingTripViewModel = new CreateHikingTripViewModel { AppUserId = curUserId };
+            return View(createHikingTripViewModel);
         }
         [HttpPost]
         public async Task<IActionResult> Create(CreateHikingTripViewModel hikingtripVM)

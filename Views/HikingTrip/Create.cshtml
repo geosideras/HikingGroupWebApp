@@ -1,8 +1,9 @@
 ﻿@using HikingGroupWebApp.Data.Enum
-
- @model HikingTrip
+@using HikingGroupWebApp.ViewModels
+ @model CreateHikingTripViewModel
 
 <form method="post" asp-action="Create" enctype="multipart/form-data">
+    <input type="hidden" id="AppUserId" name="AppUserId" asp-for="AppUserId" />
     <div class="form-group">
         <label asp-for="Title">Title</label>
         <input asp-for="Title" class="form-control" placeholder="Title">
@@ -15,7 +16,7 @@
     </div>
     <div class="form-group">
         <label asp-for="HikingTripCategory">HikkingTripCategory</label>
-        <select asp-for="HikingTripCategory" asp-items="@Html.GetEnumSelectList<ClubCategory>()" class="form-control form-control-lg">
+        <select asp-for="HikingTripCategory" asp-items="@Html.GetEnumSelectList<HikingTripCategory>()" class="form-control form-control-lg">
             <option>--Select--</option>
         </select>
         <span asp-validation-for="HikingTripCategory" class="text-danger"></span>
