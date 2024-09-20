@@ -78,6 +78,7 @@ namespace HikingGroupWebApp.Controllers
                 Address = club.Address,
                 URL = club.Image,
                 ClubCategory = club.ClubCategory,
+                AppUserId = club.AppUserId
             };
             return View(clubVM);
         }
@@ -85,6 +86,12 @@ namespace HikingGroupWebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(int id, EditClubViewModel clubVM)
         {
+            // Remove the validation for Image field if no new image is uploaded
+            if (clubVM.Image == null)
+            {
+                ModelState.Remove("Image");
+            }
+
             if (!ModelState.IsValid)
             {
                 foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
@@ -99,32 +106,39 @@ namespace HikingGroupWebApp.Controllers
 
             if (userClub != null)
             {
-                try
+                string imageUrl = userClub.Image; // Preserve the existing image
+
+                if (clubVM.Image != null) // If a new image is uploaded
                 {
-                    //Change in order to not keeping the old uploaded photo in cloudinary
-                    var fi = new FileInfo(userClub.Image);
-                    var publicId = Path.GetFileNameWithoutExtension(fi.Name);
-                    await _photoService.DeletePhotoAsync(publicId);
-                    //Original Code
-                    //await _photoService.DeletePhotoAsync(userClub.Image);
+                    try
+                    {
+                        // Delete the old photo from Cloudinary
+                        var fi = new FileInfo(userClub.Image);
+                        var publicId = Path.GetFileNameWithoutExtension(fi.Name);
+                        await _photoService.DeletePhotoAsync(publicId);
+
+                        // Add the new photo
+                        var photoResult = await _photoService.AddPhotoAsync(clubVM.Image);
+                        imageUrl = photoResult.Url.ToString(); // Update with the new image URL
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("", "Could not delete or upload photo");
+                        return View(clubVM);
+                    }
                 }
 
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Could not delete photo");
-                    return View(clubVM);
-                }
-
-                var photoResult = await _photoService.AddPhotoAsync(clubVM.Image);
+                clubVM.AppUserId = userClub.AppUserId;
 
                 var club = new Club
                 {
                     Id = id,
                     Title = clubVM.Title,
                     Description = clubVM.Description,
-                    Image = photoResult.Url.ToString(),
+                    Image = imageUrl,
                     AddressId = clubVM.AddressId,
                     Address = clubVM.Address,
+                    AppUserId = clubVM.AppUserId
                 };
 
             _clubRepository.Update(club);

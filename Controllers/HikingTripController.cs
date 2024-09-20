@@ -77,7 +77,8 @@ namespace HikingGroupWebApp.Controllers
                 AddressId = hikingtrip.AddressId,
                 Address = hikingtrip.Address,
                 URL = hikingtrip.Image,
-                HikingTripCategory = hikingtrip.HikingTripCategory
+                HikingTripCategory = hikingtrip.HikingTripCategory,
+                AppUserId = hikingtrip.AppUserId
             };
             return View(hikingtripVM);
         }
@@ -85,6 +86,12 @@ namespace HikingGroupWebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Edit(int id, EditHikingTripViewModel hikingtripVM)
         {
+            // Remove the validation for Image field if no new image is uploaded
+            if (hikingtripVM.Image == null)
+            {
+                ModelState.Remove("Image");
+            }
+
             if (!ModelState.IsValid)
             {
                 foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
@@ -99,6 +106,7 @@ namespace HikingGroupWebApp.Controllers
 
             if (userHikingTrip != null)
             {
+                string imageUrl = userHikingTrip.Image; // Preserve the existing image
                 try
                 {
                     //Change in order to not keeping the old uploaded photo in cloudinary
@@ -115,18 +123,17 @@ namespace HikingGroupWebApp.Controllers
                     return View(hikingtripVM);
                 }
 
-                var photoResult = await _photoService.AddPhotoAsync(hikingtripVM.Image);
-
-                int? addressId = hikingtripVM.AddressId.HasValue ? hikingtripVM.AddressId.Value : userHikingTrip.AddressId;
+                hikingtripVM.AppUserId = userHikingTrip.AppUserId;
 
                 var hikingTrip = new HikingTrip
                 {
                     Id = id,
                     Title = hikingtripVM.Title,
                     Description = hikingtripVM.Description,
-                    Image = photoResult.Url.ToString(),
-                    AddressId = addressId.Value,
+                    Image = imageUrl,
+                    AddressId = hikingtripVM.AddressId,
                     Address = hikingtripVM.Address,
+                    AppUserId = hikingtripVM.AppUserId
                 };
 
                 _hikingtripRepository.Update(hikingTrip);

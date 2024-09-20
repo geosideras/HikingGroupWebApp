@@ -11,8 +11,9 @@ namespace HikingGroupWebApp.ViewModels
         public int? AddressId { get; set; }
         public Address Address { get; set; }
         public string? URL { get; set; }
-        public IFormFile Image { get; set; }
+        public IFormFile? Image { get; set; }
         public HikingTripCategory HikingTripCategory { get; set; }
+        public string AppUserId { get; set; }
     }
 }
 
