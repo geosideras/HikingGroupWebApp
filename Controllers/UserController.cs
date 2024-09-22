@@ -14,7 +14,7 @@ namespace HikingGroupWebApp.Controllers
         }
 
         [HttpGet("users")]
-        public async Task<IActionResult> IndexAsync()
+        public async Task<IActionResult> Index()
         {
             var users = await _userRepository.GetAllUsers();
             List<UserViewModel> result = new List<UserViewModel>();
@@ -25,11 +25,12 @@ namespace HikingGroupWebApp.Controllers
                     Id = user.Id,
                     UserName = user.UserName,
                     Pace = user.Pace,
-                    MeanDistance = user.MeanDistance
+                    MeanDistance = user.MeanDistance,
+                    ProfileImageUrl = user.ProfileImageUrl
                 };
                 result.Add(userViewModel);
             }
-            return View();
+            return View(result);
         }
 
         public async Task<IActionResult> Detail(string id)
