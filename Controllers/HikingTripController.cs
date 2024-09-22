@@ -2,6 +2,7 @@
 using HikingGroupWebApp.Interfaces;
 using HikingGroupWebApp.Models;
 using HikingGroupWebApp.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 
@@ -13,11 +14,14 @@ namespace HikingGroupWebApp.Controllers
         private readonly IHikingTripRepository _hikingtripRepository;
         private readonly IPhotoService _photoService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public HikingTripController(IHikingTripRepository hikingtripRepository, IPhotoService photoService, IHttpContextAccessor httpContextAccessor)
+        private readonly UserManager<AppUser> _userManager;
+        public HikingTripController(IHikingTripRepository hikingtripRepository, IPhotoService photoService, 
+            IHttpContextAccessor httpContextAccessor, UserManager<AppUser> userManager)
         {
             _hikingtripRepository = hikingtripRepository;
             _photoService = photoService;
             _httpContextAccessor = httpContextAccessor;
+            _userManager = userManager;
         }
         public async Task<IActionResult> Index()
         {
@@ -92,14 +96,28 @@ namespace HikingGroupWebApp.Controllers
                 ModelState.Remove("Image");
             }
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            bool isAdmin = await _userManager.IsInRoleAsync(currentUser, "admin");
+
             if (!ModelState.IsValid)
             {
                 foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                 {
                     Console.WriteLine(error.ErrorMessage);
+                    if (error.ErrorMessage == "The AppUserId field is required." && isAdmin == true)
+                    {
+                        // Optionally remove this specific error if you don't want it in ModelState
+                        ModelState.Remove("AppUserId"); // This will stop the error from appearing in validation summary
+                        break; // Exit the loop as we found the error and handled it
+                    }
+                    ModelState.AddModelError("", "Failed to edit hikingtrip");
+                    return View("Edit", hikingtripVM);
                 }
-                ModelState.AddModelError("", "Failed to edit hikingtrip");
-                return View("Edit", hikingtripVM);
+                if (!ModelState.IsValid)
+                {
+                    ModelState.AddModelError("", "Failed to edit club");
+                    return View("Edit", hikingtripVM);
+                }
             }
 
             var userHikingTrip = await _hikingtripRepository.GetByIdAsyncNoTracking(id);
@@ -107,20 +125,24 @@ namespace HikingGroupWebApp.Controllers
             if (userHikingTrip != null)
             {
                 string imageUrl = userHikingTrip.Image; // Preserve the existing image
-                try
+                if (userHikingTrip.Image != null) // If a new image is uploaded
                 {
-                    //Change in order to not keeping the old uploaded photo in cloudinary
-                    var fi = new FileInfo(userHikingTrip.Image);
-                    var publicId = Path.GetFileNameWithoutExtension(fi.Name);
-                    await _photoService.DeletePhotoAsync(publicId);
-                    //Original Code
-                    //await _photoService.DeletePhotoAsync(userHikingTrip.Image);
-                }
+                    try
+                    {
+                        // Delete the old photo from Cloudinary
+                        var fi = new FileInfo(userHikingTrip.Image);
+                        var publicId = Path.GetFileNameWithoutExtension(fi.Name);
+                        await _photoService.DeletePhotoAsync(publicId);
 
-                catch (Exception ex)
-                {
-                    ModelState.AddModelError("", "Could not delete photo");
-                    return View(hikingtripVM);
+                        // Add the new photo
+                        var photoResult = await _photoService.AddPhotoAsync(hikingtripVM.Image);
+                        imageUrl = photoResult.Url.ToString(); // Update with the new image URL
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError("", "Could not delete or upload photo");
+                        return View(hikingtripVM);
+                    }
                 }
 
                 hikingtripVM.AppUserId = userHikingTrip.AppUserId;
@@ -130,6 +152,7 @@ namespace HikingGroupWebApp.Controllers
                     Id = id,
                     Title = hikingtripVM.Title,
                     Description = hikingtripVM.Description,
+                    HikingTripCategory = hikingtripVM.HikingTripCategory,
                     Image = imageUrl,
                     AddressId = hikingtripVM.AddressId,
                     Address = hikingtripVM.Address,

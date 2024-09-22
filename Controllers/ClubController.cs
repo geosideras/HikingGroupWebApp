@@ -2,6 +2,7 @@
 using HikingGroupWebApp.Interfaces;
 using HikingGroupWebApp.Models;
 using HikingGroupWebApp.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Linq.Expressions;
 
@@ -13,11 +14,14 @@ namespace HikingGroupWebApp.Controllers
         private readonly IClubRepository _clubRepository;
         private readonly IPhotoService _photoService;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        public ClubController(IClubRepository clubRepository, IPhotoService photoService, IHttpContextAccessor httpContextAccessor)
+        private readonly UserManager<AppUser> _userManager; 
+        public ClubController(IClubRepository clubRepository, IPhotoService photoService, 
+            IHttpContextAccessor httpContextAccessor, UserManager<AppUser> userManager)
         {
             _clubRepository = clubRepository;
             _photoService = photoService;
             _httpContextAccessor = httpContextAccessor;
+            _userManager = userManager; 
         }
         public async Task<IActionResult> Index()
         {
@@ -91,15 +95,28 @@ namespace HikingGroupWebApp.Controllers
             {
                 ModelState.Remove("Image");
             }
-
+            var currentUser = await _userManager.GetUserAsync(User);
+            bool isAdmin = await _userManager.IsInRoleAsync(currentUser, "admin");
             if (!ModelState.IsValid)
             {
                 foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
                 {
                     Console.WriteLine(error.ErrorMessage);
+                    if (error.ErrorMessage == "The AppUserId field is required." && isAdmin == true)
+                    {
+                        // Optionally remove this specific error if you don't want it in ModelState
+                        ModelState.Remove("AppUserId"); // This will stop the error from appearing in validation summary
+                        break; // Exit the loop as we found the error and handled it
+                    }
+                    ModelState.AddModelError("", "Failed to edit club");
+                    return View("Edit", clubVM);
                 }
-                ModelState.AddModelError("", "Failed to edit club");
-                return View("Edit", clubVM);
+                if (!ModelState.IsValid)
+                {
+                    ModelState.AddModelError("", "Failed to edit club");
+                    return View("Edit", clubVM);
+                }
+
             }
 
             var userClub = await _clubRepository.GetByIdAsyncNoTracking(id);
@@ -138,7 +155,8 @@ namespace HikingGroupWebApp.Controllers
                     Image = imageUrl,
                     AddressId = clubVM.AddressId,
                     Address = clubVM.Address,
-                    AppUserId = clubVM.AppUserId
+                    AppUserId = clubVM.AppUserId,
+                    ClubCategory = clubVM.ClubCategory
                 };
 
             _clubRepository.Update(club);
