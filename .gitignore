@@ -362,5 +362,5 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 
-#Exclude appsettigs.json to hide API key
+#Exclude appsettings to hide sensitive data
 appsettings.json
